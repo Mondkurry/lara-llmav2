@@ -1,6 +1,8 @@
+# Files
 .git
 .ipynb
+.DS_Store
 
+# Directories
 __pycache__/*
 miniAV/*
-*.DS_Store
