@@ -134,18 +134,25 @@ class ImageProcessor:
         self.dist = dist
 
     def split_image(self, image):
+        print("\nsplitting")
         _, w = image.shape[:2]
-        return image[:, : w // 2], image[:, w // 2 :]
+        mid_point = (w + 1) // 2  # This rounds up if w is odd
+        print(
+            f"Split Shapes:\t{image[:, :mid_point].shape}\t{image[:, mid_point:].shape}"
+        )
+        print(f"Original Shape:\t{image.shape}")
+
+        return image[:, :mid_point], image[:, mid_point:]
 
     def undistort_image(self, image):
-        h, w = image.shape[:2]
-        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
-            self.mtx, self.dist, (w, h), 1, (w, h)
-        )
-        undistorted_img = cv2.undistort(image, self.mtx, self.dist, None, newcameramtx)
-        x, y, w, h = roi
-        undistorted_img = undistorted_img[y : y + h, x : x + w]
+        print("\nundistorting")
+        print(f"Shape Before:\t{image.shape}")
+        # Directly undistort the image without changing the camera matrix or cropping
+        undistorted_img = cv2.undistort(image, self.mtx, self.dist, None, self.mtx)
+        print(f"Shape After:\t{undistorted_img.shape}")
         return undistorted_img
 
     def concatenate_images(self, left_image, right_image):
+        print("\nconcatenating")
+        print(f"Image Shapes:\t{left_image.shape}, {right_image.shape}")
         return np.concatenate((left_image, right_image), axis=1)

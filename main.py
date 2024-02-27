@@ -6,20 +6,20 @@ def run_calibration(run_calibration: bool = False, run_processor: bool = False):
     if run_calibration:
         # Assume we have calibration images for left and right cameras
         calibration_images_left = [
-            "images/calibration_image_0.png",
-            "images/calibration_image_1.png",
-            "images/calibration_image_2.png",
-            "images/calibration_image_3.png",
-            "images/calibration_image_4.png",
-            "images/calibration_image_5.png",
-            "images/calibration_image_6.png",
+            "test_images/calibration_image_0.png",
+            "test_images/calibration_image_1.png",
+            "test_images/calibration_image_2.png",
+            "test_images/calibration_image_3.png",
+            # "images/calibration_image_4.png",
+            # "images/calibration_image_5.png",
+            # "images/calibration_image_6.png",
         ]  # list of file paths or images
 
-        # calibration_images_right = [
-        #     "images/calibration_image_4.png",
-        #     "images/calibration_image_5.png",
-        #     "images/calibration_image_6.png",
-        # ]  # list of file paths or images
+        calibration_images_right = [
+            "test_images/calibration_image_4.png",
+            "test_images/calibration_image_5.png",
+            "test_images/calibration_image_6.png",
+        ]  # list of file paths or images
 
         # Calibrate the left camera
         calibrator_left = CameraCalibrator(
@@ -31,29 +31,29 @@ def run_calibration(run_calibration: bool = False, run_processor: bool = False):
         mtx_left, dist_left = calibrator_left.calibrate_camera(img.shape[1::-1])
 
         # Calibrate the right camera
-        # calibrator_right = CameraCalibrator((9, 6), 0.025)
-        # for img_path in calibration_images_right:
-        #     img = cv2.imread(img_path)
-        #     calibrator_right.find_checkerboard(img)
-        # mtx_right, dist_right = calibrator_right.calibrate_camera(img.shape[1::-1])
+        calibrator_right = CameraCalibrator((9, 6), 0.025)
+        for img_path in calibration_images_right:
+            img = cv2.imread(img_path)
+            calibrator_right.find_checkerboard(img)
+        mtx_right, dist_right = calibrator_right.calibrate_camera(img.shape[1::-1])
 
         print("Left camera matrix:")
         print(mtx_left)
         print("Left distortion coefficients:")
         print(dist_left)
 
-        # print("Right camera matrix:")
-        # print(mtx_right)
-        # print("Right distortion coefficients:")
-        # print(dist_right)
+        print("Right camera matrix:")
+        print(mtx_right)
+        print("Right distortion coefficients:")
+        print(dist_right)
 
     if run_processor:
         # Process an example image
         image_processor_left = ImageProcessor(mtx_left, dist_left)
-        # image_processor_right = ImageProcessor(mtx_right, dist_right)
+        image_processor_right = ImageProcessor(mtx_right, dist_right)
 
         # Read the image
-        image = cv2.imread("images/calibration_image_0.png")
+        image = cv2.imread("test_images/calibration_image_0.png")
 
         # Split the image
         left_image, right_image = image_processor_left.split_image(image)
@@ -61,11 +61,11 @@ def run_calibration(run_calibration: bool = False, run_processor: bool = False):
         # Undistort the images
         # Undistort the images
         left_undistorted = image_processor_left.undistort_image(left_image)
-        # right_undistorted = image_processor_right.undistort_image(right_image)
+        right_undistorted = image_processor_right.undistort_image(right_image)
 
         # Concatenate the undistorted images
         undistorted_image = image_processor_left.concatenate_images(
-            left_undistorted, left_undistorted
+            left_undistorted, right_undistorted
         )
 
         # Display the result
