@@ -1,4 +1,5 @@
 .git
 .ipynb
 
+__pycache__/*
 miniAV/*
