@@ -59,6 +59,7 @@ class camAPI(object):
 ```
 
 ### WebCam python class
+
 ```python
 class webCam(object):
   """
@@ -135,9 +136,11 @@ class webCam(object):
 
   def close(self):
     self.camLeft.release()  
-    self.camRight.release()  ```
+    self.camRight.release()  
+```
 
-## How the GUI handles Images in mav.py
+### Generic Camera Class for the API
+
 ```python
 
     #-------------------------- CAMERA properties -----------------------------#
