@@ -3,29 +3,32 @@ import cv2 as cv2
 
 
 def show_camera():
-    """Use openCV to show the current camera frame in a continuous loop. Press 'q' to exit the loop."""
-    cap = cv2.VideoCapture(0)
+    """Use openCV to show the current camera frame in a continuous loop. Press 'esc' to exit the loop and Spacebar to take a picture."""
+
+    cam = cv2.VideoCapture(0)
+    cv2.namedWindow("Calibration Image Capture")
+    img_counter = 0
 
     while True:
-        _, frame = cap.read()  # ret, frame = cap.read()
-
-        # cv.putText(Frame, Text, Org, FontFace, FontScale, Color, Thickness, LineType, BottomLeftOrigin)
-        cv2.putText(
-            frame,
-            "Press q to exit",
-            (10, 75),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1.5,
-            (0, 0, 255),
-            4,
-            cv2.LINE_AA,
-        )
-        cv2.imshow("frame", frame)
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        ret, frame = cam.read()
+        if not ret:
+            print("failed to grab frame")
             break
+        cv2.imshow("test", frame)
 
-    cap.release()
+        k = cv2.waitKey(1)
+        if k % 256 == 27:
+            # ESC pressed
+            print("Escape hit, closing...")
+            break
+        elif k % 256 == 32:
+            # SPACE pressed
+            img_name = "images/calibration_image_{}.png".format(img_counter)
+            cv2.imwrite(img_name, frame)
+            print("{} written!".format(img_name))
+            img_counter += 1
+
+    cam.release()
     cv2.destroyAllWindows()
 
 
@@ -146,59 +149,3 @@ class ImageProcessor:
 
     def concatenate_images(self, left_image, right_image):
         return np.concatenate((left_image, right_image), axis=1)
-
-
-def main():
-    show_camera()
-
-    # Assume we have calibration images for left and right cameras
-    calibration_images_left = ["ADD PATH HERE"]  # list of file paths or images
-    calibration_images_right = ["ADD PATH HERE"]  # list of file paths or images
-
-    # Calibrate the left camera
-    calibrator_left = CameraCalibrator(
-        (9, 6), 0.025
-    )  # Checkerboard of 9x6 squares, each 0.025m
-    for img_path in calibration_images_left:
-        img = cv2.imread(img_path)
-        calibrator_left.find_checkerboard(img)
-    mtx_left, dist_left = calibrator_left.calibrate_camera(img.shape[1::-1])
-
-    # Calibrate the right camera
-    calibrator_right = CameraCalibrator((9, 6), 0.025)
-    for img_path in calibration_images_right:
-        img = cv2.imread(img_path)
-        calibrator_right.find_checkerboard(img)
-    mtx_right, dist_right = calibrator_right.calibrate_camera(img.shape[1::-1])
-
-    # Process an example image
-    image_processor_left = ImageProcessor(mtx_left, dist_left)
-    image_processor_right = ImageProcessor(mtx_right, dist_right)
-
-    # Read the image
-    image = cv2.imread("/mnt/data/image.png")
-
-    # Split the image
-    left_image, right_image = image_processor_left.split_image(image)
-
-    # Undistort the images
-    # Undistort the images
-    left_undistorted = image_processor_left.undistort_image(left_image)
-    right_undistorted = image_processor_right.undistort_image(right_image)
-
-    # Concatenate the undistorted images
-    undistorted_image = image_processor_left.concatenate_images(
-        left_undistorted, right_undistorted
-    )
-
-    # Display the result
-    cv2.imshow("Undistorted Image", undistorted_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    # Save the undistorted image if needed
-    cv2.imwrite("undistorted_image.png", undistorted_image)
-
-
-if __name__ == "__main__":
-    main()
