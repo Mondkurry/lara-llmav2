@@ -42,7 +42,6 @@ def takePicture(self):
 ```
 # ---------------------------- Take Picture Button ---------------------------- #
 
-"""
 Label:
   text: '[b]Take Picture:[/b]'
   markup: True
@@ -56,5 +55,4 @@ Button:
   width: 100
   on_press: root.parent.takePicture()
 
-"""
 ```
