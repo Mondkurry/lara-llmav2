@@ -6,3 +6,7 @@
 # Directories
 __pycache__/*
 miniAV/*
+miniAV/landmark_model/*
+miniAv/models/*
+miniAV/steer_model/*
+miniAV/support/*
