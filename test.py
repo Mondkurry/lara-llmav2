@@ -3,6 +3,46 @@ import numpy as np
 import glob
 import json
 
+from PIL import Image, ImageOps
+import matplotlib.pyplot as plt
+
+
+def stack_images_vertically(image_path1, image_path2):
+    # Load the images
+    img1 = Image.open(image_path1)
+    img2 = Image.open(image_path2)
+
+    # Determine the target width to match the smallest width of the two images
+    target_width = min(img1.width, img2.width)
+
+    # Resize images to have the same width while maintaining aspect ratios
+    img1 = img1.resize(
+        (target_width, int(target_width * img1.height / img1.width)),
+        Image.Resampling.LANCZOS,
+    )
+    img2 = img2.resize(
+        (target_width, int(target_width * img2.height / img2.width)),
+        Image.Resampling.LANCZOS,
+    )
+
+    # Create a new image with height equal to the sum of both images' heights
+    combined_height = img1.height + img2.height
+    combined_image = Image.new("RGB", (target_width, combined_height))
+
+    # Paste the images into the combined image
+    combined_image.paste(img1, (0, 0))
+    combined_image.paste(img2, (0, img1.height))
+
+    # Display the combined image
+    plt.figure(figsize=(5, 10))
+    plt.imshow(combined_image)
+    plt.axis("off")  # Hide axes
+    plt.show()
+
+
+# Example usage:
+# stack_images_vertically('path_to_image_1.jpg', 'path_to_image_2.jpg')
+
 
 class CameraCalibrator:
     def __init__(self, checkerboard, image_dir, criteria):
@@ -171,7 +211,7 @@ class ImageConcatenator:
         cv2.imwrite(output_path, concatenated_image)
 
 
-def run(calibrate=False, undistort=True):
+def run(calibrate=True, undistort=True, output=False):
     if calibrate:
         # Usage
         calibrator = CameraCalibrator(
@@ -192,16 +232,19 @@ def run(calibrate=False, undistort=True):
 
         # Concatenate the undistorted images
         concatenator = ImageConcatenator()
-        concatenated_image = concatenator.concatenate_images(img_1, img_2)
+        concatenated_image = concatenator.concatenate_images(img_2, img_1)
         concatenator.display_concatenated_image(concatenated_image)
         concatenator.save_concatenated_image(
             concatenated_image, "concatenated_image.png"
         )
+    if output:
+        stack_images_vertically("image_from_dataset.png", "concatenated_image.png")
 
 
 def main():
     # run(calibrate=True, undistort=True)
-    run(calibrate=False, undistort=True)
+    # run(calibrate=False, undistort=True, output=False)
+    run(calibrate=False, undistort=False, output=True)
 
 
 if __name__ == "__main__":
