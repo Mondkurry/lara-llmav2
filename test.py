@@ -140,12 +140,15 @@ class ImageUndistorter:
         mtx = np.array(self.calibration_data["K"])
         dist = np.array(self.calibration_data["D"])
 
-        # Calculate the new optimal camera matrix for undistortion
+        # Use the original calibration matrix or slightly adjust if necessary
         new_K = mtx.copy()
-        # Adjust the new camera matrix to be based on the width and height of the resized image
-        new_K[0, 0] *= w / mtx[0, 2] / 2
-        new_K[1, 1] *= h / mtx[1, 2] / 2
-        new_K[0, 2] = w / 2.0
+
+        new_K[0, 0] = mtx[0, 0] * 0.375
+        new_K[1, 1] = mtx[1, 1] * 0.375
+
+        new_K[0, 2] = (
+            w / 2.0
+        )  # Adjust the principal point to the center of the resized image
         new_K[1, 2] = h / 2.0
 
         # Initialize the undistortion transformation map
@@ -243,8 +246,8 @@ def run(calibrate=True, undistort=True, output=False):
 
 def main():
     # run(calibrate=True, undistort=True)
-    # run(calibrate=False, undistort=True, output=False)
-    run(calibrate=False, undistort=False, output=True)
+    run(calibrate=False, undistort=True, output=True)
+    # run(calibrate=False, undistort=False, output=True)
 
 
 if __name__ == "__main__":
