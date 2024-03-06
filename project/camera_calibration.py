@@ -92,67 +92,53 @@ class CameraCalibrator:
 
 
 class ImageProcessor:
-    """
-    Class for processing images using camera calibration data.
-
-    Attributes:
-        mtx (ndarray): Camera matrix from calibration.
-        dist (ndarray): Distortion coefficients from calibration.
-
-    Methods:
-        split_image(image):
-            Splits the image into left and right halves.
-
-            Parameters:
-                image (ndarray): Image to be split.
-
-            Returns:
-                tuple: Left and right halves of the image.
-
-        undistort_image(image):
-            Removes distortion from an image using calibration data.
-
-            Parameters:
-                image (ndarray): Image to be undistorted.
-
-            Returns:
-                ndarray: The undistorted image.
-
-        concatenate_images(left_image, right_image):
-            Concatenates two images horizontally.
-
-            Parameters:
-                left_image (ndarray): Left half of the image.
-                right_image (ndarray): Right half of the image.
-
-            Returns:
-                ndarray: The concatenated image.
-    """
-
-    def __init__(self, mtx, dist):
-        self.mtx = mtx
-        self.dist = dist
+    def __init__(self, mtx_left, dist_left, mtx_right=None, dist_right=None):
+        self.mtx_left = mtx_left
+        self.dist_left = dist_left
+        self.mtx_right = mtx_right if mtx_right is not None else mtx_left
+        self.dist_right = dist_right if dist_right is not None else dist_left
 
     def split_image(self, image):
-        print("\nsplitting")
-        _, w = image.shape[:2]
-        mid_point = (w + 1) // 2  # This rounds up if w is odd
-        print(
-            f"Split Shapes:\t{image[:, :mid_point].shape}\t{image[:, mid_point:].shape}"
-        )
-        print(f"Original Shape:\t{image.shape}")
+        height, width = image.shape[:2]
+        mid_point = width // 2
+        left_image = image[:, :mid_point]
+        right_image = image[:, mid_point:]
+        return left_image, right_image
 
-        return image[:, :mid_point], image[:, mid_point:]
-
-    def undistort_image(self, image):
-        print("\nundistorting")
-        print(f"Shape Before:\t{image.shape}")
-        # Directly undistort the image without changing the camera matrix or cropping
-        undistorted_img = cv2.undistort(image, self.mtx, self.dist, None, self.mtx)
-        print(f"Shape After:\t{undistorted_img.shape}")
+    def undistort_image(self, image, camera_side="left"):
+        if camera_side == "left":
+            mtx = self.mtx_left
+            dist = self.dist_left
+        else:
+            mtx = self.mtx_right
+            dist = self.dist_right
+        undistorted_img = cv2.undistort(image, mtx, dist, None, mtx)
         return undistorted_img
 
-    def concatenate_images(self, left_image, right_image):
-        print("\nconcatenating")
-        print(f"Image Shapes:\t{left_image.shape}, {right_image.shape}")
-        return np.concatenate((left_image, right_image), axis=1)
+    def process_images(
+        self, left_image=None, right_image=None, concatenated_image=None
+    ):
+        if concatenated_image is not None:
+            left_image, right_image = self.split_image(concatenated_image)
+            left_undistorted = self.undistort_image(left_image, "left")
+            right_undistorted = self.undistort_image(right_image, "right")
+        else:
+            left_undistorted = (
+                self.undistort_image(left_image, "left")
+                if left_image is not None
+                else None
+            )
+            right_undistorted = (
+                self.undistort_image(right_image, "right")
+                if right_image is not None
+                else None
+            )
+
+        if left_undistorted is not None and right_undistorted is not None:
+            return np.concatenate((left_undistorted, right_undistorted), axis=1)
+        elif left_undistorted is not None:
+            return left_undistorted
+        elif right_undistorted is not None:
+            return right_undistorted
+        else:
+            return None

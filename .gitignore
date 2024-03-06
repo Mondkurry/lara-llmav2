@@ -4,7 +4,10 @@
 .DS_Store
 
 # Directories
+images/*
 __pycache__/*
+miniAV/__pycache__/*
+project/__pycache__/*
 miniAV/*
 miniAV/landmark_model/*
 miniAv/models/*
